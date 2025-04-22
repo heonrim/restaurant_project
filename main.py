@@ -25,6 +25,7 @@ class OrderItem(BaseModel):
 class OrderCreate(BaseModel):
     customer_id: int
     items: List[OrderItem]
+    staff_id: Optional[int] = None
 
 class OrderUpdate(BaseModel):
     status: str
@@ -59,17 +60,17 @@ async def create_order(order: OrderCreate):
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "INSERT INTO Orders (customer_id, order_time, status) VALUES (%s, %s, %s)",
-            (order.customer_id, datetime.now(), "製作中")
+            "INSERT INTO Orders (customer_id, order_time, status, staff_id) VALUES (%s, %s, %s, %s)",
+            (order.customer_id, datetime.now(), "製作中", order.staff_id)
         )
         order_id = cursor.lastrowid
-        
+
         for item in order.items:
             cursor.execute(
                 "INSERT INTO OrderItems (order_id, item_id, quantity, notes) VALUES (%s, %s, %s, %s)",
                 (order_id, item.item_id, item.quantity, item.notes)
             )
-        
+
         conn.commit()
         return {"order_id": order_id}
     except Error as e:
